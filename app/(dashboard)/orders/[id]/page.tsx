@@ -26,6 +26,7 @@ import { OrderEditButton } from '@/components/orders/order-edit-button';
 import { OrderStatusHistory } from '@/components/orders/order-status-history';
 import { OrderAttachments } from '@/components/orders/order-attachments';
 import { OrderSyncStatus } from '@/components/orders/order-sync-status';
+import { OrderCostsCard } from '@/components/orders/order-costs-card';
 import { isGoogleConfigured } from '@/lib/google-calendar';
 import type { StatusHistoryItem } from '@/types';
 
@@ -199,6 +200,17 @@ export default async function OrderDetailPage({
               error={order.googleSyncError}
               syncedAt={order.googleSyncedAt?.toISOString() ?? null}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {session.user.role === Role.ADMIN && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Rentowność</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderCostsCard orderId={order.id} />
           </CardContent>
         </Card>
       )}

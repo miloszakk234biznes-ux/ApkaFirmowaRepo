@@ -1,13 +1,13 @@
 /**
  * Plik: app/(dashboard)/finances/page.tsx
- * Cel: Moduł finansowy — dostępny tylko dla administratora (placeholder Etap 1).
- *      Pracownik zostaje przekierowany na pulpit (RBAC warstwowy).
- * Zależności: lib/auth, components/shared/page-placeholder.
+ * Cel: Moduł finansowy (tylko ADMIN) — dashboard z KPI, wykresami, wydatkami,
+ *      przychodami i celami. Pracownik przekierowany na pulpit.
+ * Zależności: lib/auth, components/finances/finance-dashboard.
  */
 import { redirect } from 'next/navigation';
 import { Role } from '@prisma/client';
 import { auth } from '@/lib/auth';
-import { PagePlaceholder } from '@/components/shared/page-placeholder';
+import { FinanceDashboard } from '@/components/finances/finance-dashboard';
 
 export default async function FinancesPage() {
   const session = await auth();
@@ -16,10 +16,14 @@ export default async function FinancesPage() {
   }
 
   return (
-    <PagePlaceholder
-      title="Finanse"
-      description="Przychody, koszty, rentowność zleceń i cele finansowe."
-      stage="Etapie 5"
-    />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Finanse</h1>
+        <p className="text-muted-foreground">
+          Przychody, koszty, rentowność i cele finansowe firmy.
+        </p>
+      </div>
+      <FinanceDashboard />
+    </div>
   );
 }

@@ -17,6 +17,7 @@ import {
 import { updateOrderSchema } from '@/lib/validations/order';
 import { createAuditLog } from '@/lib/audit';
 import { syncOrderToGoogle, deleteOrderEvent } from '@/lib/google-calendar';
+import { syncOrderIncome } from '@/lib/finance';
 
 type Params = { params: { id: string } };
 
@@ -140,7 +141,10 @@ export async function PATCH(req: Request, { params }: Params) {
       details: d.status ? `status=${d.status}` : undefined,
     });
 
-    // Synchronizacja zmian z Google Calendar.
+    // Auto-przychód oraz synchronizacja zmian z Google Calendar.
+    if (d.status !== undefined || d.amount !== undefined) {
+      await syncOrderIncome(order);
+    }
     await syncOrderToGoogle(order, session.user.id);
 
     return NextResponse.json({ order });

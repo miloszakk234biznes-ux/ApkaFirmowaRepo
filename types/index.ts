@@ -134,3 +134,89 @@ export interface ClientDetailResponse {
   };
   stats: ClientStats;
 }
+
+// ── Finanse ─────────────────────────────────────────────────────────────────
+
+export interface FinanceTotals {
+  revenue: number;
+  expense: number;
+  profit: number;
+  orders: number;
+}
+
+export interface FinanceSummary {
+  today: FinanceTotals;
+  month: FinanceTotals;
+  monthly: {
+    key: string;
+    label: string;
+    revenue: number;
+    expense: number;
+    profit: number;
+  }[];
+  categories: { category: string; label: string; amount: number }[];
+  stats: {
+    avgRevenuePerOrder: number;
+    avgCost: number;
+    marginPct: number;
+    revenueTrendPct: number | null;
+  };
+  goal: {
+    targetRevenue: number;
+    targetProfit: number;
+    targetOrders: number;
+    currentRevenue: number;
+    currentProfit: number;
+    currentOrders: number;
+    remainingRevenue: number;
+    ordersNeeded: number | null;
+    avgOrderValue: number;
+    revenuePct: number;
+  } | null;
+  alerts: { level: 'warning' | 'danger'; message: string }[];
+}
+
+export interface ExpenseRow {
+  id: string;
+  date: string;
+  amount: string;
+  category: string;
+  description: string | null;
+  paymentMethod: string | null;
+  receiptPhoto: string | null;
+  orderId: string | null;
+}
+
+export interface IncomeRow {
+  id: string;
+  date: string;
+  amount: string;
+  description: string | null;
+  source: string | null;
+  orderId: string | null;
+  order: { id: string; title: string } | null;
+}
+
+export interface GoalRow {
+  id: string;
+  month: number;
+  year: number;
+  targetRevenue: string;
+  targetProfit: string;
+  targetOrders: number;
+}
+
+export interface OrderCostItem {
+  id: string;
+  category: string;
+  description: string | null;
+  amount: string;
+}
+
+export interface Profitability {
+  gross: number;
+  costs: number;
+  profit: number;
+  marginPct: number;
+  items: OrderCostItem[];
+}

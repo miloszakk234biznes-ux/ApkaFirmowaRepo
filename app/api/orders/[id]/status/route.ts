@@ -11,6 +11,7 @@ import { canMutateOrder, orderInclude, recordStatusChange } from '@/lib/orders';
 import { changeStatusSchema } from '@/lib/validations/order';
 import { createAuditLog } from '@/lib/audit';
 import { syncOrderToGoogle } from '@/lib/google-calendar';
+import { syncOrderIncome } from '@/lib/finance';
 
 type Params = { params: { id: string } };
 
@@ -60,6 +61,8 @@ export async function PATCH(req: Request, { params }: Params) {
       details: `${existing.status} -> ${parsed.data.status}`,
     });
 
+    // Auto-przychód: tworzy/usuwa wpis Income przy DONE.
+    await syncOrderIncome(order);
     // Odzwierciedl zmianę statusu w Google Calendar (np. anulowanie usuwa event).
     await syncOrderToGoogle(order, session.user.id);
 

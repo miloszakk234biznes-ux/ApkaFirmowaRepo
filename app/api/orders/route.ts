@@ -18,6 +18,7 @@ import {
 import { createOrderSchema, orderQuerySchema } from '@/lib/validations/order';
 import { createAuditLog } from '@/lib/audit';
 import { syncOrderToGoogle } from '@/lib/google-calendar';
+import { syncOrderIncome } from '@/lib/finance';
 
 // GET /api/orders — lista z filtrami.
 export async function GET(req: Request) {
@@ -170,6 +171,10 @@ export async function POST(req: Request) {
       entityId: order.id,
     });
 
+    // Auto-przychód, jeśli zlecenie od razu utworzono jako DONE.
+    if (order.status === 'DONE') {
+      await syncOrderIncome(order);
+    }
     // Synchronizacja z Google Calendar (no-op, gdy brak konfiguracji/połączenia).
     await syncOrderToGoogle(order, session.user.id);
 

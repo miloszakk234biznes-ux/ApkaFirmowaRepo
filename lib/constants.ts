@@ -9,6 +9,7 @@ import {
   Priority,
   PaymentMethod,
   PaymentStatus,
+  ExpenseCategory,
 } from '@prisma/client';
 
 /** Statusy zleceń: etykieta + klasa koloru (kropki/tła) zgodna z tailwind.config. */
@@ -87,6 +88,32 @@ export const PAYMENT_STATUS: Record<PaymentStatus, string> = {
 
 export const PAYMENT_STATUS_OPTIONS = Object.entries(PAYMENT_STATUS).map(
   ([value, label]) => ({ value: value as PaymentStatus, label }),
+);
+
+/** 18 kategorii wydatków — etykiety PL. */
+export const EXPENSE_CATEGORY: Record<ExpenseCategory, string> = {
+  FUEL: 'Paliwo',
+  EQUIPMENT: 'Sprzęt',
+  TOOLS: 'Narzędzia',
+  MATERIALS: 'Materiały',
+  ADS: 'Reklama',
+  MARKETING: 'Marketing',
+  LEASING: 'Leasing',
+  INSTALLMENT: 'Raty',
+  PHONE: 'Telefon',
+  INTERNET: 'Internet',
+  ZUS: 'ZUS',
+  TAXES: 'Podatki',
+  ACCOUNTING: 'Księgowość',
+  SALARIES: 'Wynagrodzenia',
+  TRAINING: 'Szkolenia',
+  REPAIRS: 'Naprawy',
+  INSURANCE: 'Ubezpieczenia',
+  OTHER: 'Inne',
+};
+
+export const EXPENSE_CATEGORY_OPTIONS = Object.entries(EXPENSE_CATEGORY).map(
+  ([value, label]) => ({ value: value as ExpenseCategory, label }),
 );
 
 /** Typowe rodzaje usług (podpowiedzi do pola serviceType). */
