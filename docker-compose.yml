@@ -1,0 +1,49 @@
+# Plik: docker-compose.yml
+# Cel: Lokalne/produkcyjne uruchomienie aplikacji + PostgreSQL jednym poleceniem.
+# Użycie:
+#   1. Skopiuj .env.example -> .env i ustaw NEXTAUTH_SECRET.
+#   2. docker compose up --build
+#   3. (jednorazowo) docker compose exec app node node_modules/prisma/build/index.js db seed
+# Aplikacja: http://localhost:3000
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-apkafirmowa}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Wewnątrz sieci compose host bazy to "db".
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-apkafirmowa}?schema=public
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-ApkaFirmowa <no-reply@apkafirmowa.app>}
+    ports:
+      - '3000:3000'
+
+volumes:
+  postgres_data:

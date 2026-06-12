@@ -1,0 +1,390 @@
+// Plik: prisma/schema.prisma
+// Cel: Pełny model bazy danych aplikacji do zarządzania firmą usługową.
+//      Obejmuje użytkowników/role, klientów (CRM), zlecenia, finanse (przychody,
+//      koszty, cele), powiadomienia, To-Do, dokumenty oraz dziennik audytu.
+// Zależności: PostgreSQL, Prisma Client (@prisma/client).
+//
+// Uwaga: Modele Account/Session/VerificationToken są zgodne z NextAuth.js,
+// dzięki czemu w kolejnych etapach można dodać logowanie OAuth (Google) bez
+// zmian strukturalnych. W Etapie 1 sesje działają w trybie JWT.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// ENUMY
+// ──────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  IN_PROGRESS
+  DONE
+  CANCELLED
+  UNPAID
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  BLIK
+  OTHER
+}
+
+enum ExpenseCategory {
+  FUEL
+  EQUIPMENT
+  TOOLS
+  MATERIALS
+  ADS
+  MARKETING
+  LEASING
+  INSTALLMENT
+  PHONE
+  INTERNET
+  ZUS
+  TAXES
+  ACCOUNTING
+  SALARIES
+  TRAINING
+  REPAIRS
+  INSURANCE
+  OTHER
+}
+
+enum NotificationType {
+  ORDER_REMINDER
+  ORDER_UNPAID
+  BUDGET_ALERT
+  GOAL_ALERT
+  SYSTEM
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// UŻYTKOWNICY I AUTORYZACJA (NextAuth-compatible)
+// ──────────────────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  hashedPassword String?
+  name           String?
+  role           Role     @default(EMPLOYEE)
+  phone          String?
+  avatar         String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relacje NextAuth
+  accounts Account[]
+  sessions Session[]
+
+  // Relacje domenowe
+  assignedOrders Order[]              @relation("AssignedOrders")
+  expenses       Expense[]
+  notifications  Notification[]
+  todos          TodoTask[]
+  auditLogs      AuditLog[]
+  passwordResets PasswordResetToken[]
+
+  @@index([role])
+  @@index([active])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Token resetu hasła (wysyłany e-mailem przez nodemailer).
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// CRM — KLIENCI
+// ──────────────────────────────────────────────────────────────────────────
+
+model Client {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+  documents Document[]
+  photos    Photo[]
+
+  @@index([phone])
+  @@index([lastName])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// ZLECENIA
+// ──────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id                    String        @id @default(cuid())
+  clientId              String?
+  assignedUserId        String?
+  title                 String
+  serviceType           String?
+  description           String?       @db.Text
+  address               String?
+  scheduledAt           DateTime?
+  estimatedDuration     Int? // minuty
+  status                OrderStatus   @default(NEW)
+  priority              Priority      @default(NORMAL)
+  amount                Decimal       @default(0) @db.Decimal(12, 2)
+  deposit               Decimal       @default(0) @db.Decimal(12, 2)
+  remainingAmount       Decimal       @default(0) @db.Decimal(12, 2)
+  paymentMethod         PaymentMethod?
+  paymentStatus         PaymentStatus @default(UNPAID)
+  isRecurring           Boolean       @default(false)
+  recurringRule         String? // RRULE (iCalendar)
+  googleCalendarEventId String?
+  notes                 String?       @db.Text
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  client       Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  assignedUser User?   @relation("AssignedOrders", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  photos    Photo[]
+  documents Document[]
+  costs     OrderCost[]
+  incomes   Income[]
+  expenses  Expense[]
+
+  @@index([clientId])
+  @@index([assignedUserId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([paymentStatus])
+}
+
+model OrderCost {
+  id          String   @id @default(cuid())
+  orderId     String
+  category    String
+  description String?
+  amount      Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// FINANSE
+// ──────────────────────────────────────────────────────────────────────────
+
+model Expense {
+  id            String          @id @default(cuid())
+  userId        String
+  date          DateTime        @default(now())
+  amount        Decimal         @db.Decimal(12, 2)
+  category      ExpenseCategory
+  description   String?
+  paymentMethod PaymentMethod?
+  receiptPhoto  String?
+  orderId       String?
+  createdAt     DateTime        @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([date])
+  @@index([category])
+  @@index([orderId])
+}
+
+model Income {
+  id          String   @id @default(cuid())
+  orderId     String?
+  date        DateTime @default(now())
+  amount      Decimal  @db.Decimal(12, 2)
+  description String?
+  source      String?
+  createdAt   DateTime @default(now())
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([date])
+}
+
+model FinancialGoal {
+  id            String   @id @default(cuid())
+  month         Int // 1-12
+  year          Int
+  targetRevenue Decimal  @default(0) @db.Decimal(12, 2)
+  targetProfit  Decimal  @default(0) @db.Decimal(12, 2)
+  targetOrders  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([year, month])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// POWIADOMIENIA / TO-DO / DOKUMENTY / AUDYT
+// ──────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(SYSTEM)
+  title     String
+  message   String           @db.Text
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
+
+model TodoTask {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String?   @db.Text
+  dueDate     DateTime?
+  completed   Boolean   @default(false)
+  isPrivate   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([completed])
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  clientId   String?
+  orderId    String?
+  fileName   String
+  fileUrl    String
+  fileType   String?
+  uploadedAt DateTime @default(now())
+
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  order  Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([orderId])
+}
+
+// Zdjęcia powiązane z klientem lub zleceniem (upload — Etap 2/4).
+model Photo {
+  id         String   @id @default(cuid())
+  clientId   String?
+  orderId    String?
+  url        String
+  caption    String?
+  uploadedAt DateTime @default(now())
+
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  order  Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([orderId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?  @db.Text
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+}
