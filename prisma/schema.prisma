@@ -112,6 +112,7 @@ model User {
   todos          TodoTask[]
   auditLogs      AuditLog[]
   passwordResets PasswordResetToken[]
+  statusChanges  OrderStatusHistory[]
 
   @@index([role])
   @@index([active])
@@ -225,17 +226,34 @@ model Order {
   client       Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   assignedUser User?   @relation("AssignedOrders", fields: [assignedUserId], references: [id], onDelete: SetNull)
 
-  photos    Photo[]
-  documents Document[]
-  costs     OrderCost[]
-  incomes   Income[]
-  expenses  Expense[]
+  photos        Photo[]
+  documents     Document[]
+  costs         OrderCost[]
+  incomes       Income[]
+  expenses      Expense[]
+  statusHistory OrderStatusHistory[]
 
   @@index([clientId])
   @@index([assignedUserId])
   @@index([status])
   @@index([scheduledAt])
   @@index([paymentStatus])
+}
+
+// Historia zmian statusu zlecenia (kto, kiedy, z jakiego na jaki status).
+model OrderStatusHistory {
+  id          String       @id @default(cuid())
+  orderId     String
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  changedById String?
+  note        String?
+  createdAt   DateTime     @default(now())
+
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy User? @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
 }
 
 model OrderCost {

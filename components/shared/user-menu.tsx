@@ -9,11 +9,7 @@
 import { signOut } from 'next-auth/react';
 import { LogOut, User as UserIcon } from 'lucide-react';
 import { Role } from '@prisma/client';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +41,9 @@ export function UserMenu({ name, email, image, role }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <Avatar>
-          {image ? <AvatarImage src={image} alt={name ?? 'Użytkownik'} /> : null}
+          {image ? (
+            <AvatarImage src={image} alt={name ?? 'Użytkownik'} />
+          ) : null}
           <AvatarFallback>{initials(name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>

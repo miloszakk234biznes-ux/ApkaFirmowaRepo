@@ -42,3 +42,7 @@ prisma/*.db
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+# runtime uploads (served from public/uploads)
+/public/uploads/*
+!/public/uploads/.gitkeep

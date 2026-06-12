@@ -5,12 +5,7 @@
  * Zależności: lib/auth, components/ui/card.
  */
 import { auth } from '@/lib/auth';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 
 export default async function DashboardPage() {

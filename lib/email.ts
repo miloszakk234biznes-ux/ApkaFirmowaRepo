@@ -27,9 +27,7 @@ function getTransporter(): nodemailer.Transporter | null {
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
     secure: Number(SMTP_PORT) === 465,
-    auth: SMTP_USER
-      ? { user: SMTP_USER, pass: SMTP_PASSWORD }
-      : undefined,
+    auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASSWORD } : undefined,
   });
 
   return transporter;
@@ -38,7 +36,8 @@ function getTransporter(): nodemailer.Transporter | null {
 /** Wysyła e-mail lub — przy braku SMTP — loguje go do konsoli (dev). */
 export async function sendMail(options: SendMailOptions): Promise<void> {
   const t = getTransporter();
-  const from = process.env.SMTP_FROM ?? 'ApkaFirmowa <no-reply@apkafirmowa.app>';
+  const from =
+    process.env.SMTP_FROM ?? 'ApkaFirmowa <no-reply@apkafirmowa.app>';
 
   if (!t) {
     console.warn(
