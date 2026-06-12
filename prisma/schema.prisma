@@ -215,6 +215,9 @@ model Client {
   address   String?
   city      String?
   notes     String?  @db.Text
+  // Kolumna fulltext (PostgreSQL tsvector) — utrzymywana przez trigger
+  // (patrz migracja client_fulltext). Indeks GIN dla szybkiego wyszukiwania.
+  searchVector Unsupported("tsvector")?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -224,6 +227,7 @@ model Client {
 
   @@index([phone])
   @@index([lastName])
+  @@index([searchVector], type: Gin)
 }
 
 // ──────────────────────────────────────────────────────────────────────────

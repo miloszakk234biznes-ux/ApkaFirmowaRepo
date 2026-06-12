@@ -1,9 +1,10 @@
 /**
  * Plik: app/api/clients/route.ts
- * Cel: Minimalny CRM na potrzeby zleceń: wyszukiwanie klientów (GET ?q= — dla
- *      autocomplete po nazwisku/telefonie/adresie) oraz tworzenie klienta (POST,
- *      z deduplikacją po numerze telefonu). Pełny CRM rozszerzamy w Etapie 4.
- * Zależności: lib/prisma, lib/rbac, lib/validations/client, lib/audit.
+ * Cel: CRM klientów: lista z fulltext (tsvector) + paginacją i agregatami
+ *      (gdy podano `page`), autocomplete (gdy podano tylko `q`) oraz tworzenie
+ *      klienta (POST, z deduplikacją po telefonie). RBAC: dane wspólne firmy
+ *      — dostępne dla każdego zalogowanego.
+ * Zależności: lib/prisma, lib/rbac, lib/clients, lib/validations/client, lib/audit.
  */
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
@@ -12,22 +13,54 @@ import { requireAuth, handleAuthError } from '@/lib/rbac';
 import {
   createClientSchema,
   clientSearchSchema,
+  clientListSchema,
 } from '@/lib/validations/client';
+import { listClients } from '@/lib/clients';
 import { createAuditLog } from '@/lib/audit';
 
-// GET /api/clients?q=... — wyszukiwarka do autocomplete.
+export const dynamic = 'force-dynamic';
+
+// GET /api/clients
+//   - z parametrem `page` → paginowana lista CRM z agregatami (fulltext tsvector)
+//   - bez `page` → krótka lista do autocomplete (substring ILIKE)
 export async function GET(req: Request) {
   try {
     await requireAuth();
     const { searchParams } = new URL(req.url);
-    const parsed = clientSearchSchema.safeParse(
-      Object.fromEntries(searchParams),
-    );
+    const raw = Object.fromEntries(searchParams);
+
+    // Tryb listy CRM.
+    if ('page' in raw || 'pageSize' in raw || 'sort' in raw) {
+      const parsed = clientListSchema.safeParse(raw);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Błędne parametry', issues: parsed.error.flatten() },
+          { status: 400 },
+        );
+      }
+      const { q, page, pageSize, sort, order } = parsed.data;
+      const { rows, total } = await listClients({
+        query: q,
+        page,
+        pageSize,
+        sort,
+        order,
+      });
+      return NextResponse.json({
+        items: rows,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      });
+    }
+
+    // Tryb autocomplete.
+    const parsed = clientSearchSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Błędne parametry' }, { status: 400 });
     }
     const { q, limit } = parsed.data;
-
     const where: Prisma.ClientWhereInput = q
       ? {
           OR: [
@@ -38,13 +71,11 @@ export async function GET(req: Request) {
           ],
         }
       : {};
-
     const clients = await prisma.client.findMany({
       where,
       orderBy: { lastName: 'asc' },
       take: limit,
     });
-
     return NextResponse.json({ clients });
   } catch (error) {
     return handleAuthError(error);

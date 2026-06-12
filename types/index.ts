@@ -81,3 +81,56 @@ export interface OrdersResponse {
   pageSize: number;
   totalPages: number;
 }
+
+// ── CRM klientów ────────────────────────────────────────────────────────────
+
+export interface ClientListItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  city: string | null;
+  address: string | null;
+  ordersCount: number;
+  totalValue: number;
+  lastVisit: string | null;
+}
+
+export interface ClientsListResponse {
+  items: ClientListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ClientStats {
+  ordersCount: number;
+  doneCount: number;
+  totalValue: number;
+  paidValue: number;
+  lastVisit: string | null;
+}
+
+export interface ClientOrderRow {
+  id: string;
+  title: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod | null;
+  amount: string;
+  deposit: string;
+  remainingAmount: string;
+  scheduledAt: string | null;
+  assignedUser: UserLite | null;
+}
+
+export interface ClientDetailResponse {
+  client: ClientFull & {
+    notes: string | null;
+    createdAt: string;
+    orders: ClientOrderRow[];
+  };
+  stats: ClientStats;
+}
