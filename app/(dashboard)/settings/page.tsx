@@ -5,6 +5,7 @@
  *      etapach.
  * Zależności: lib/auth, components/ui/card.
  */
+import { Suspense } from 'react';
 import { auth } from '@/lib/auth';
 import { Role } from '@prisma/client';
 import {
@@ -14,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { GoogleCalendarCard } from '@/components/settings/google-calendar-card';
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -50,6 +52,10 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Suspense fallback={null}>
+        <GoogleCalendarCard />
+      </Suspense>
 
       {user?.role === Role.ADMIN && (
         <Card>

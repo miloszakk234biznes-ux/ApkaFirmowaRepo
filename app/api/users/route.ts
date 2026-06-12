@@ -4,6 +4,8 @@
  *      kalendarza. Dostępna tylko dla administratora (RBAC).
  * Zależności: lib/prisma, lib/rbac.
  */
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';

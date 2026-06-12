@@ -17,6 +17,7 @@ import {
 } from '@/lib/orders';
 import { createOrderSchema, orderQuerySchema } from '@/lib/validations/order';
 import { createAuditLog } from '@/lib/audit';
+import { syncOrderToGoogle } from '@/lib/google-calendar';
 
 // GET /api/orders — lista z filtrami.
 export async function GET(req: Request) {
@@ -168,6 +169,9 @@ export async function POST(req: Request) {
       entity: 'Order',
       entityId: order.id,
     });
+
+    // Synchronizacja z Google Calendar (no-op, gdy brak konfiguracji/połączenia).
+    await syncOrderToGoogle(order, session.user.id);
 
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {

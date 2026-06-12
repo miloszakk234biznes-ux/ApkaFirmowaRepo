@@ -25,6 +25,8 @@ import { OrderStatusActions } from '@/components/orders/order-status-actions';
 import { OrderEditButton } from '@/components/orders/order-edit-button';
 import { OrderStatusHistory } from '@/components/orders/order-status-history';
 import { OrderAttachments } from '@/components/orders/order-attachments';
+import { OrderSyncStatus } from '@/components/orders/order-sync-status';
+import { isGoogleConfigured } from '@/lib/google-calendar';
 import type { StatusHistoryItem } from '@/types';
 
 export default async function OrderDetailPage({
@@ -184,6 +186,22 @@ export default async function OrderDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {isGoogleConfigured() && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Google Calendar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderSyncStatus
+              orderId={order.id}
+              status={order.googleSyncStatus}
+              error={order.googleSyncError}
+              syncedAt={order.googleSyncedAt?.toISOString() ?? null}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

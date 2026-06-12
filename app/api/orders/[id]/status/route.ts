@@ -10,6 +10,7 @@ import { requireAuth, handleAuthError } from '@/lib/rbac';
 import { canMutateOrder, orderInclude, recordStatusChange } from '@/lib/orders';
 import { changeStatusSchema } from '@/lib/validations/order';
 import { createAuditLog } from '@/lib/audit';
+import { syncOrderToGoogle } from '@/lib/google-calendar';
 
 type Params = { params: { id: string } };
 
@@ -58,6 +59,9 @@ export async function PATCH(req: Request, { params }: Params) {
       entityId: order.id,
       details: `${existing.status} -> ${parsed.data.status}`,
     });
+
+    // Odzwierciedl zmianę statusu w Google Calendar (np. anulowanie usuwa event).
+    await syncOrderToGoogle(order, session.user.id);
 
     return NextResponse.json({ order });
   } catch (error) {

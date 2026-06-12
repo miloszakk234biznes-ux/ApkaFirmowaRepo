@@ -16,6 +16,7 @@ import {
 } from '@/lib/orders';
 import { updateOrderSchema } from '@/lib/validations/order';
 import { createAuditLog } from '@/lib/audit';
+import { syncOrderToGoogle, deleteOrderEvent } from '@/lib/google-calendar';
 
 type Params = { params: { id: string } };
 
@@ -139,6 +140,9 @@ export async function PATCH(req: Request, { params }: Params) {
       details: d.status ? `status=${d.status}` : undefined,
     });
 
+    // Synchronizacja zmian z Google Calendar.
+    await syncOrderToGoogle(order, session.user.id);
+
     return NextResponse.json({ order });
   } catch (error) {
     return handleAuthError(error);
@@ -161,6 +165,9 @@ export async function DELETE(_req: Request, { params }: Params) {
     if (!canMutateOrder(session, existing)) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 });
     }
+
+    // Usuń powiązany event Google przed usunięciem zlecenia.
+    await deleteOrderEvent(existing, session.user.id);
 
     await prisma.order.delete({ where: { id: params.id } });
     await createAuditLog({
