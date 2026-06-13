@@ -38,6 +38,22 @@ export async function POST(req: Request) {
     const { name, email, phone, password } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
+    // Publiczna rejestracja dozwolona tylko dla pierwszego konta (bootstrap)
+    // lub gdy jawnie włączona zmienną ALLOW_PUBLIC_REGISTRATION=true.
+    // Kolejne konta tworzy administrator w panelu „Pracownicy".
+    const userCount = await prisma.user.count();
+    const publicAllowed =
+      userCount === 0 || process.env.ALLOW_PUBLIC_REGISTRATION === 'true';
+    if (!publicAllowed) {
+      return NextResponse.json(
+        {
+          error:
+            'Rejestracja jest zamknięta. Konto może utworzyć administrator firmy.',
+        },
+        { status: 403 },
+      );
+    }
+
     const existing = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -49,7 +65,6 @@ export async function POST(req: Request) {
     }
 
     // Pierwsze konto w systemie zostaje administratorem.
-    const userCount = await prisma.user.count();
     const role = userCount === 0 ? Role.ADMIN : Role.EMPLOYEE;
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
