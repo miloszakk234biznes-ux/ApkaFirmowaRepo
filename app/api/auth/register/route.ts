@@ -10,12 +10,21 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { registerSchema } from '@/lib/validations/auth';
 import { createAuditLog } from '@/lib/audit';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { Role } from '@prisma/client';
 
 const BCRYPT_ROUNDS = 12;
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting rejestracji per IP.
+    const limit = rateLimit(`register:${clientIp(req)}`, 5, 60_000);
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: 'Zbyt wiele prób. Spróbuj ponownie za chwilę.' },
+        { status: 429 },
+      );
+    }
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
 

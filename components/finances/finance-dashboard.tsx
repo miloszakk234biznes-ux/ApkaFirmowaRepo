@@ -15,11 +15,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FinanceCharts } from '@/components/finances/finance-charts';
+import dynamic from 'next/dynamic';
 import { ExpensesTab } from '@/components/finances/expenses-tab';
 import { IncomesTab } from '@/components/finances/incomes-tab';
 import { GoalsTab } from '@/components/finances/goals-tab';
 import type { FinanceTotals } from '@/types';
+
+// Wykresy (Recharts) ładowane leniwie — zmniejsza initial bundle dashboardu.
+const FinanceCharts = dynamic(
+  () =>
+    import('@/components/finances/finance-charts').then((m) => m.FinanceCharts),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-72 w-full rounded-lg" />,
+  },
+);
 
 function KpiGroup({ title, t }: { title: string; t: FinanceTotals }) {
   const cards = [

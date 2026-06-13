@@ -11,10 +11,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { useCalendarOrders } from '@/hooks/use-orders';
 import { rangeForDay, formatDayLabel } from '@/lib/calendar-utils';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OrdersMap } from '@/components/map/orders-map';
+
+// Mapa ładowana leniwie (zależna od window / Google Maps).
+const OrdersMap = dynamic(
+  () => import('@/components/map/orders-map').then((m) => m.OrdersMap),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[420px] w-full rounded-lg" />,
+  },
+);
 
 export function MapShell() {
   const [date, setDate] = React.useState(() => new Date());

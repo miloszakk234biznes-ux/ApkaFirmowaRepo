@@ -11,6 +11,7 @@
 import * as React from 'react';
 import { Navigation, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { escapeHtml } from '@/lib/sanitize';
 import type { OrderListItem } from '@/types';
 
 const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -83,7 +84,7 @@ export function OrdersMap({ orders }: { orders: OrderListItem[] }) {
                   title: o.title,
                 });
                 const info = new g.maps.InfoWindow({
-                  content: `<div style="font-size:13px"><b>${o.title}</b><br/>${o.address ?? ''}<br/><a href="/orders/${o.id}">Szczegóły</a></div>`,
+                  content: `<div style="font-size:13px"><b>${escapeHtml(o.title)}</b><br/>${escapeHtml(o.address ?? '')}<br/><a href="/orders/${encodeURIComponent(o.id)}">Szczegóły</a></div>`,
                 });
                 marker.addListener('click', () => info.open(map, marker));
                 bounds.extend(pos);

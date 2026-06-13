@@ -66,6 +66,21 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // Content Security Policy — dopuszcza zasoby aplikacji, Google Maps i fonty.
+    // 'unsafe-inline'/'unsafe-eval' wymagane przez runtime Next bez nonce'ów
+    // (docelowo: CSP z nonce — patrz docs/INSTALL.md).
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ');
+
     return [
       {
         source: '/:path*',
@@ -77,6 +92,11 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(self)',
           },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          { key: 'Content-Security-Policy', value: csp },
         ],
       },
     ];

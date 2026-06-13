@@ -13,6 +13,7 @@ import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 import { loginSchema } from '@/lib/validations/auth';
 import { createAuditLog } from '@/lib/audit';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Rozszerzenie typów NextAuth o nasze pola (rola, id).
 declare module 'next-auth' {
@@ -56,6 +57,12 @@ export const authOptions: NextAuthOptions = {
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
+
+        // Rate limiting prób logowania per e-mail (ochrona przed brute-force).
+        const limit = rateLimit(`login:${email.toLowerCase()}`, 5, 60_000);
+        if (!limit.success) {
+          throw new Error('Zbyt wiele prób logowania. Spróbuj za chwilę.');
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase() },

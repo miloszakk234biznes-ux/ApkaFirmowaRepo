@@ -55,3 +55,9 @@ prisma/*.db
 /public/worker-*.js
 /public/worker-*.js.map
 /public/fallback-*.js
+
+# testy
+/test-results
+/playwright-report
+/.playwright
+/coverage

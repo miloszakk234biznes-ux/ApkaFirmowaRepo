@@ -11,9 +11,17 @@ import { forgotPasswordSchema } from '@/lib/validations/auth';
 import { createPasswordResetToken } from '@/lib/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { createAuditLog } from '@/lib/audit';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    const limit = rateLimit(`forgot:${clientIp(req)}`, 5, 60_000);
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: 'Zbyt wiele prób. Spróbuj ponownie za chwilę.' },
+        { status: 429 },
+      );
+    }
     const body = await req.json();
     const parsed = forgotPasswordSchema.safeParse(body);
 

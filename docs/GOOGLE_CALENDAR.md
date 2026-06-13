@@ -77,10 +77,10 @@ Wymaga **publicznego HTTPS** (Google nie wysyła powiadomień na `localhost`).
 
 ## 6. Rozwiązywanie problemów
 
-| Objaw | Przyczyna / rozwiązanie |
-| ----- | ----------------------- |
-| „Integracja nie jest skonfigurowana" | Brak `GOOGLE_CLIENT_ID`/`SECRET` w env. |
-| `redirect_uri_mismatch` | Redirect URI w Google ≠ `{NEXTAUTH_URL}/api/google-calendar/callback`. |
-| Brak refresh tokenu po połączeniu | Połącz ponownie — używamy `prompt=consent`, by go wymusić. |
-| Push nie działa | Wymaga publicznego HTTPS; sprawdź adres webhooka i logi. |
-| Status zlecenia „Błąd synchronizacji" | Szczegóły w `googleSyncError`; użyj **Synchronizuj** po naprawie. |
+| Objaw                                 | Przyczyna / rozwiązanie                                                |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| „Integracja nie jest skonfigurowana"  | Brak `GOOGLE_CLIENT_ID`/`SECRET` w env.                                |
+| `redirect_uri_mismatch`               | Redirect URI w Google ≠ `{NEXTAUTH_URL}/api/google-calendar/callback`. |
+| Brak refresh tokenu po połączeniu     | Połącz ponownie — używamy `prompt=consent`, by go wymusić.             |
+| Push nie działa                       | Wymaga publicznego HTTPS; sprawdź adres webhooka i logi.               |
+| Status zlecenia „Błąd synchronizacji" | Szczegóły w `googleSyncError`; użyj **Synchronizuj** po naprawie.      |

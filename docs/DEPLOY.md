@@ -27,16 +27,16 @@ Dokument opisuje dwa scenariusze wdrożenia aplikacji ApkaFirmowa:
 3. Framework preset: **Next.js** (wykrywany automatycznie).
 4. W **Environment Variables** dodaj:
 
-   | Zmienna           | Wartość                                                    |
-   | ----------------- | ---------------------------------------------------------- |
-   | `DATABASE_URL`    | connection string z Railway/Supabase                       |
-   | `NEXTAUTH_URL`    | `https://twoja-domena.vercel.app` (po pierwszym deployu)    |
-   | `NEXTAUTH_SECRET` | wynik `openssl rand -base64 32`                             |
-   | `SMTP_HOST`       | host SMTP (np. `smtp.resend.com`, opcjonalnie)             |
-   | `SMTP_PORT`       | `587`                                                      |
-   | `SMTP_USER`       | użytkownik SMTP                                            |
-   | `SMTP_PASSWORD`   | hasło/klucz SMTP                                           |
-   | `SMTP_FROM`       | `ApkaFirmowa <no-reply@twojadomena.pl>`                    |
+   | Zmienna           | Wartość                                                  |
+   | ----------------- | -------------------------------------------------------- |
+   | `DATABASE_URL`    | connection string z Railway/Supabase                     |
+   | `NEXTAUTH_URL`    | `https://twoja-domena.vercel.app` (po pierwszym deployu) |
+   | `NEXTAUTH_SECRET` | wynik `openssl rand -base64 32`                          |
+   | `SMTP_HOST`       | host SMTP (np. `smtp.resend.com`, opcjonalnie)           |
+   | `SMTP_PORT`       | `587`                                                    |
+   | `SMTP_USER`       | użytkownik SMTP                                          |
+   | `SMTP_PASSWORD`   | hasło/klucz SMTP                                         |
+   | `SMTP_FROM`       | `ApkaFirmowa <no-reply@twojadomena.pl>`                  |
 
 5. **Build Command** (Vercel domyślnie `npm run build`) już zawiera
    `prisma generate`. Nie wymaga zmian.
