@@ -1,9 +1,8 @@
 /**
  * Plik: components/shared/bottom-nav.tsx
- * Cel: Dolna nawigacja mobilna — 4 szybkie skróty + przycisk „Więcej", który
- *      otwiera pełne menu ze WSZYSTKIMI zakładkami (Zlecenia, Mapa, Finanse,
- *      Raporty, To-Do, Ustawienia…) filtrowanymi wg roli. Widoczna tylko na
- *      małych ekranach; podświetla aktywną trasę.
+ * Cel: Dolna nawigacja mobilna — 4 szybkie skróty + hamburger (prawy dolny róg),
+ *      który wysuwa BOCZNE menu ze WSZYSTKIMI zakładkami (jak sidebar na desktopie),
+ *      filtrowanymi wg roli. Ustawienia konta są pod ikoną profilu w nagłówku.
  * Zależności: lib/navigation, components/ui/sheet, next/navigation, lib/utils.
  * Użycie: renderowany w app/(dashboard)/layout.tsx (ukryty na desktop).
  */
@@ -52,24 +51,27 @@ export function BottomNav({ role }: { role: Role }) {
           );
         })}
 
-        {/* Przycisk „Więcej" — otwiera pełne menu. */}
+        {/* Hamburger (prawy dolny róg) — wysuwa boczne menu z wszystkimi zakładkami. */}
         <button
           type="button"
           onClick={() => setOpen(true)}
           className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs text-muted-foreground"
-          aria-label="Więcej"
+          aria-label="Menu"
         >
           <Menu className="h-5 w-5" />
-          Więcej
+          Menu
         </button>
       </nav>
 
+      {/* Boczne menu (drawer) — pełna nawigacja jak sidebar na desktopie. */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" className="rounded-t-xl pb-8">
-          <SheetHeader>
-            <SheetTitle>Menu</SheetTitle>
+        <SheetContent side="left" className="w-72 p-0">
+          <SheetHeader className="border-b px-6 py-4">
+            <SheetTitle className="text-left text-lg font-bold">
+              ApkaFirmowa
+            </SheetTitle>
           </SheetHeader>
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <nav className="space-y-1 p-3">
             {all.map((item) => {
               const Icon = item.icon;
               return (
@@ -78,18 +80,18 @@ export function BottomNav({ role }: { role: Role }) {
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-center text-sm',
+                    'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive(item.href)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'hover:bg-accent',
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                   )}
                 >
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-5 w-5" />
                   {item.label}
                 </Link>
               );
             })}
-          </div>
+          </nav>
         </SheetContent>
       </Sheet>
     </>
