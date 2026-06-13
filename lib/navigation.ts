@@ -12,7 +12,6 @@ import {
   ListTodo,
   FileText,
   Settings,
-  Menu,
   MapPin,
   type LucideIcon,
 } from 'lucide-react';
@@ -39,13 +38,12 @@ export const navItems: NavItem[] = [
   { label: 'Ustawienia', href: '/settings', icon: Settings },
 ];
 
-/** Skrócona nawigacja dolna (mobile) — maks. 5 ikon. */
+/** Skrócona nawigacja dolna (mobile) — 4 szybkie skróty + przycisk „Więcej". */
 export const bottomNavItems: NavItem[] = [
   { label: 'Pulpit', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Kalendarz', href: '/calendar', icon: Calendar },
+  { label: 'Zlecenia', href: '/orders', icon: FileText },
   { label: 'Klienci', href: '/clients', icon: Users },
-  { label: 'Finanse', href: '/finances', icon: Wallet, roles: [Role.ADMIN] },
-  { label: 'Menu', href: '/settings', icon: Menu },
 ];
 
 /** Filtruje pozycje nawigacji wg roli użytkownika. */
