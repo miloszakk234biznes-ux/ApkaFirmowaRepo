@@ -13,6 +13,8 @@ import { UserMenu } from '@/components/shared/user-menu';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { NotificationBell } from '@/components/shared/notification-bell';
 import { QuickAddFab } from '@/components/orders/quick-add-fab';
+import { PwaManager } from '@/components/pwa/pwa-manager';
+import { InstallPrompt } from '@/components/pwa/install-prompt';
 
 export default async function DashboardLayout({
   children,
@@ -48,6 +50,8 @@ export default async function DashboardLayout({
       </div>
       <BottomNav role={user.role} />
       <QuickAddFab />
+      <PwaManager />
+      <InstallPrompt />
     </div>
   );
 }

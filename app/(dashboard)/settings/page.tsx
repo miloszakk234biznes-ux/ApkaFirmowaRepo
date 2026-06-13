@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { GoogleCalendarCard } from '@/components/settings/google-calendar-card';
+import { PushCard } from '@/components/settings/push-card';
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -56,6 +57,8 @@ export default async function SettingsPage() {
       <Suspense fallback={null}>
         <GoogleCalendarCard />
       </Suspense>
+
+      <PushCard />
 
       {user?.role === Role.ADMIN && (
         <Card>

@@ -15,7 +15,7 @@ import {
   createExpenseSchema,
   type CreateExpenseInput,
 } from '@/lib/validations/finance';
-import { apiRequest } from '@/lib/fetcher';
+import { submitWithOfflineFallback } from '@/lib/offline/queue';
 import {
   EXPENSE_CATEGORY_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
@@ -95,12 +95,17 @@ export function ExpenseFormDialog({
   async function onSubmit(data: CreateExpenseInput) {
     setSubmitting(true);
     try {
-      await apiRequest('/api/expenses', 'POST', {
+      const res = await submitWithOfflineFallback('expense', '/api/expenses', {
         ...data,
         date: data.date ? new Date(data.date).toISOString() : undefined,
         receiptPhoto: receiptUrl ?? undefined,
       });
-      toast.success('Wydatek dodany');
+      if (res.offline) {
+        toast.success('Zapisano offline — wyśle się po połączeniu');
+        window.dispatchEvent(new Event('apka:queued'));
+      } else {
+        toast.success('Wydatek dodany');
+      }
       onOpenChange(false);
       onSaved?.();
     } catch (e) {

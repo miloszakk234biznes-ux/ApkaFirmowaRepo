@@ -46,3 +46,12 @@ prisma/*.db
 # runtime uploads (served from public/uploads)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# next-pwa generated service worker + workbox runtime
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/worker-*.js
+/public/worker-*.js.map
+/public/fallback-*.js

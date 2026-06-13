@@ -21,6 +21,19 @@ export const metadata: Metadata = {
   description:
     'Kalendarz zleceń, CRM klientów i finanse firmy usługowej w jednym miejscu.',
   applicationName: 'ApkaFirmowa',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ApkaFirmowa',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
 };
 
 export const viewport: Viewport = {

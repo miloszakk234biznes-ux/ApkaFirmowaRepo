@@ -18,6 +18,7 @@ import { Role } from '@prisma/client';
 import { createOrderSchema } from '@/lib/validations/order';
 import type { z } from 'zod';
 import { apiRequest } from '@/lib/fetcher';
+import { submitWithOfflineFallback } from '@/lib/offline/queue';
 import { useUsers } from '@/hooks/use-users';
 import { ClientCombobox } from '@/components/orders/client-combobox';
 import { Button } from '@/components/ui/button';
@@ -157,19 +158,30 @@ export function OrderForm({
           ? localInputToIso(String(values.scheduledAt))
           : undefined,
       };
-      const res = isEdit
-        ? await apiRequest<{ order: { id: string } }>(
-            `/api/orders/${order!.id}`,
-            'PATCH',
-            payload,
-          )
-        : await apiRequest<{ order: { id: string } }>(
-            '/api/orders',
-            'POST',
-            payload,
-          );
-      toast.success(isEdit ? 'Zlecenie zaktualizowane' : 'Zlecenie utworzone');
-      onSuccess?.(res.order.id);
+      if (isEdit) {
+        const res = await apiRequest<{ order: { id: string } }>(
+          `/api/orders/${order!.id}`,
+          'PATCH',
+          payload,
+        );
+        toast.success('Zlecenie zaktualizowane');
+        onSuccess?.(res.order.id);
+      } else {
+        // Tworzenie z fallbackiem offline (kolejka IndexedDB).
+        const res = await submitWithOfflineFallback<{ order: { id: string } }>(
+          'order',
+          '/api/orders',
+          payload,
+        );
+        if (res.offline) {
+          toast.success('Zapisano offline — wyśle się po połączeniu');
+          window.dispatchEvent(new Event('apka:queued'));
+          onCancel?.();
+        } else {
+          toast.success('Zlecenie utworzone');
+          onSuccess?.(res.data.order.id);
+        }
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Wystąpił błąd');
     } finally {
