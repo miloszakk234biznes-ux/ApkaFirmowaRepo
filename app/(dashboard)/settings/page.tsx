@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/card';
 import { GoogleCalendarCard } from '@/components/settings/google-calendar-card';
 import { PushCard } from '@/components/settings/push-card';
+import { UsersCard } from '@/components/settings/users-card';
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -60,21 +61,8 @@ export default async function SettingsPage() {
 
       <PushCard />
 
-      {user?.role === Role.ADMIN && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Zarządzanie pracownikami</CardTitle>
-            <CardDescription>
-              Tworzenie kont, blokowanie i zmiana ról — w przygotowaniu.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Panel administracyjny pracowników zostanie rozbudowany w kolejnych
-              etapach (RBAC jest już aktywny).
-            </p>
-          </CardContent>
-        </Card>
+      {user?.role === Role.ADMIN && user.id && (
+        <UsersCard currentUserId={user.id} />
       )}
     </div>
   );
