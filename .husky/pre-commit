@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Uruchamia lint-staged: ESLint + Prettier na plikach z commita.
+npx lint-staged
