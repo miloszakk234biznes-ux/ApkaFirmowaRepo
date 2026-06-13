@@ -49,3 +49,41 @@ export async function buildClientsWorkbook(
   const arrayBuffer = await wb.xlsx.writeBuffer();
   return Buffer.from(arrayBuffer);
 }
+
+/** Raport finansowy (miesięczne wiersze) do XLSX. */
+export async function buildFinanceReportWorkbook(data: {
+  title: string;
+  rows: { label: string; revenue: number; expense: number; profit: number }[];
+  totals: { revenue: number; expense: number; profit: number };
+}): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'ApkaFirmowa';
+  wb.created = new Date();
+  const ws = wb.addWorksheet('Raport finansowy');
+
+  ws.addRow([data.title]);
+  ws.getRow(1).font = { bold: true, size: 14 };
+  ws.addRow([]);
+
+  const header = ws.addRow(['Okres', 'Przychód', 'Koszty', 'Zysk']);
+  header.font = { bold: true };
+
+  for (const r of data.rows) {
+    ws.addRow([r.label, r.revenue, r.expense, r.profit]);
+  }
+  const totalRow = ws.addRow([
+    'RAZEM',
+    data.totals.revenue,
+    data.totals.expense,
+    data.totals.profit,
+  ]);
+  totalRow.font = { bold: true };
+
+  ws.columns = [{ width: 16 }, { width: 14 }, { width: 14 }, { width: 14 }];
+  ['B', 'C', 'D'].forEach((c) => {
+    ws.getColumn(c).numFmt = '#,##0.00';
+  });
+
+  const arrayBuffer = await wb.xlsx.writeBuffer();
+  return Buffer.from(arrayBuffer);
+}

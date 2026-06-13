@@ -224,3 +224,48 @@ export async function getFinanceSummary() {
 
   return { today, month, monthly, categories, stats, goal, alerts };
 }
+
+const MONTH_NAMES = [
+  'Styczeń',
+  'Luty',
+  'Marzec',
+  'Kwiecień',
+  'Maj',
+  'Czerwiec',
+  'Lipiec',
+  'Sierpień',
+  'Wrzesień',
+  'Październik',
+  'Listopad',
+  'Grudzień',
+];
+
+/** Raport roczny — przychody/koszty/zysk dla każdego miesiąca + sumy. */
+export async function getYearlyReport(year: number) {
+  const rows: {
+    label: string;
+    revenue: number;
+    expense: number;
+    profit: number;
+  }[] = [];
+  for (let m = 0; m < 12; m++) {
+    const from = new Date(year, m, 1);
+    const to = endOfMonth(from);
+    const t = await totalsForRange(from, to);
+    rows.push({
+      label: MONTH_NAMES[m]!,
+      revenue: t.revenue,
+      expense: t.expense,
+      profit: t.profit,
+    });
+  }
+  const totals = rows.reduce(
+    (acc, r) => ({
+      revenue: acc.revenue + r.revenue,
+      expense: acc.expense + r.expense,
+      profit: acc.profit + r.profit,
+    }),
+    { revenue: 0, expense: 0, profit: 0 },
+  );
+  return { rows, totals };
+}

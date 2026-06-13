@@ -11,6 +11,7 @@ import { Sidebar } from '@/components/shared/sidebar';
 import { BottomNav } from '@/components/shared/bottom-nav';
 import { UserMenu } from '@/components/shared/user-menu';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { NotificationBell } from '@/components/shared/notification-bell';
 import { QuickAddFab } from '@/components/orders/quick-add-fab';
 
 export default async function DashboardLayout({
@@ -33,6 +34,7 @@ export default async function DashboardLayout({
           <span className="text-base font-semibold md:hidden">ApkaFirmowa</span>
           <div className="hidden md:block" />
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <ThemeToggle />
             <UserMenu
               name={user.name}

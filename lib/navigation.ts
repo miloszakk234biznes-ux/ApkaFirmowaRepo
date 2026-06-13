@@ -13,6 +13,7 @@ import {
   FileText,
   Settings,
   Menu,
+  MapPin,
   type LucideIcon,
 } from 'lucide-react';
 import { Role } from '@prisma/client';
@@ -31,6 +32,7 @@ export const navItems: NavItem[] = [
   { label: 'Kalendarz', href: '/calendar', icon: Calendar },
   { label: 'Zlecenia', href: '/orders', icon: FileText },
   { label: 'Klienci', href: '/clients', icon: Users },
+  { label: 'Mapa', href: '/map', icon: MapPin },
   { label: 'Finanse', href: '/finances', icon: Wallet, roles: [Role.ADMIN] },
   { label: 'Raporty', href: '/reports', icon: FileText, roles: [Role.ADMIN] },
   { label: 'To-Do', href: '/todo', icon: ListTodo },
