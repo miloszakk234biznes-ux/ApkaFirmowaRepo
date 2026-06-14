@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Role } from '@prisma/client';
-import { createOrderSchema } from '@/lib/validations/order';
+import { orderFormSchema } from '@/lib/validations/order';
 import type { z } from 'zod';
 import { apiRequest } from '@/lib/fetcher';
 import { submitWithOfflineFallback } from '@/lib/offline/queue';
@@ -43,7 +43,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import type { ClientFull, OrderDetail } from '@/types';
 
-type FormValues = z.input<typeof createOrderSchema>;
+type FormValues = z.input<typeof orderFormSchema>;
 
 interface OrderFormProps {
   /** Rola bieżącego użytkownika — pracownik nie wybiera przypisania. */
@@ -108,7 +108,7 @@ export function OrderForm({
     setValue,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(createOrderSchema),
+    resolver: zodResolver(orderFormSchema),
     defaultValues: {
       title: order?.title ?? '',
       clientId: order?.clientId ?? undefined,

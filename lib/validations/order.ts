@@ -51,16 +51,36 @@ export const orderBaseSchema = z.object({
   notes: optionalText,
 });
 
-/** Tworzenie — wymaga albo clientId, albo imienia+nazwiska nowego klienta. */
+/** Reguła klienta: wymagany istniejący clientId albo imię+nazwisko nowego. */
+const clientRequiredMessage = {
+  message: 'Wybierz klienta z bazy lub podaj imię i nazwisko nowego klienta',
+  path: ['clientLastName'],
+};
+function hasClient(d: {
+  clientId?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
+}): boolean {
+  return !!d.clientId || (!!d.clientFirstName && !!d.clientLastName);
+}
+
+/** Tworzenie (API) — wymaga albo clientId, albo imienia+nazwiska nowego klienta. */
 export const createOrderSchema = orderBaseSchema.refine(
-  (d) => !!d.clientId || (!!d.clientFirstName && !!d.clientLastName),
-  {
-    message: 'Wybierz klienta z bazy lub podaj imię i nazwisko nowego klienta',
-    path: ['clientLastName'],
-  },
+  hasClient,
+  clientRequiredMessage,
 );
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+
+/**
+ * Schemat formularza (UI) — pole `scheduledAt` przyjmuje wartość z inputa
+ * `datetime-local` (format "yyyy-MM-ddTHH:mm", bez offsetu). Konwersja do ISO
+ * następuje przed wysłaniem do API (które waliduje już ścisłym `createOrderSchema`).
+ */
+export const orderFormSchema = orderBaseSchema
+  .extend({ scheduledAt: z.string().optional() })
+  .refine(hasClient, clientRequiredMessage);
+export type OrderFormInput = z.input<typeof orderFormSchema>;
 
 /** Aktualizacja — wszystkie pola opcjonalne (partial). */
 export const updateOrderSchema = orderBaseSchema.partial();
