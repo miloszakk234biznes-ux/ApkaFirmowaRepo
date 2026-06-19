@@ -38,12 +38,12 @@ export const navItems: NavItem[] = [
   { label: 'Ustawienia', href: '/settings', icon: Settings },
 ];
 
-/** Skrócona nawigacja dolna (mobile) — 4 szybkie skróty + przycisk „Więcej". */
+/** Skrócona nawigacja dolna (mobile) — 4 szybkie skróty + hamburger „Menu". */
 export const bottomNavItems: NavItem[] = [
   { label: 'Pulpit', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Kalendarz', href: '/calendar', icon: Calendar },
   { label: 'Zlecenia', href: '/orders', icon: FileText },
-  { label: 'Klienci', href: '/clients', icon: Users },
+  { label: 'Mapa', href: '/map', icon: MapPin },
+  { label: 'Kalendarz', href: '/calendar', icon: Calendar },
 ];
 
 /** Filtruje pozycje nawigacji wg roli użytkownika. */

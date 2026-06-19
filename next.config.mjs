@@ -11,8 +11,14 @@ const withPWA = withPWAInit({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
-  // Custom worker (worker/index.ts) zawiera obsługę Web Push i Background Sync.
+  // Po wdrożeniu nowej wersji SW aktywuje się od razu i przejmuje kontrolę,
+  // dzięki czemu użytkownicy nie utkną na starej wersji w pamięci.
+  reloadOnOnline: true,
   workboxOptions: {
+    skipWaiting: true,
+    clientsClaim: true,
+    cleanupOutdatedCaches: true,
+    // Custom worker (worker/index.ts) zawiera obsługę Web Push i Background Sync.
     // Nie cache'ujemy odpowiedzi API metodami innymi niż GET.
     runtimeCaching: [
       {
@@ -46,10 +52,14 @@ const withPWA = withPWAInit({
         },
       },
       {
-        // Pulpit i strony aplikacji — stale-while-revalidate.
-        urlPattern: /\/(dashboard|calendar|orders|clients|finances)/i,
-        handler: 'StaleWhileRevalidate',
-        options: { cacheName: 'pages-cache' },
+        // Strony aplikacji — network-first: po wdrożeniu zawsze pobiera świeży
+        // HTML (z nowymi skryptami), a offline korzysta z cache.
+        urlPattern: /\/(dashboard|calendar|orders|clients|finances|reports|todo|map|settings)/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'pages-cache',
+          networkTimeoutSeconds: 5,
+        },
       },
     ],
   },
