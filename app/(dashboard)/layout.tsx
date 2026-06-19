@@ -49,7 +49,7 @@ export default async function DashboardLayout({
         <main className="flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
       </div>
       <BottomNav role={user.role} />
-      <QuickAddFab />
+      <QuickAddFab isAdmin={user.role === 'ADMIN'} />
       <PwaManager />
       <InstallPrompt />
     </div>

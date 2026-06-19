@@ -4,7 +4,13 @@
  *      wydatki, zysk) i lista najbliższych zleceń (z uwzględnieniem RBAC scope).
  * Zależności: lib/auth, lib/prisma, lib/orders, components/*.
  */
-import { startOfDay, endOfDay, addDays } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  addDays,
+  startOfMonth,
+  endOfMonth,
+} from 'date-fns';
 import { Role } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -26,6 +32,8 @@ export default async function DashboardPage() {
   const to = endOfDay(now);
   const tomorrowFrom = startOfDay(addDays(now, 1));
   const tomorrowTo = endOfDay(addDays(now, 1));
+  const monthFrom = startOfMonth(now);
+  const monthTo = endOfMonth(now);
   const scope = scopeForUser(session);
 
   // Wspólny zestaw pól dla list zleceń na pulpicie.
@@ -42,7 +50,15 @@ export default async function DashboardPage() {
 
   // Dzisiejsze zlecenia (wg roli) — licznik oraz pełna lista na cały dzień
   // (pokazujemy wszystkie zlecenia dnia, także te z minioną godziną — nie znikają).
-  const [todayOrders, upcoming, tomorrow, income, expense] = await Promise.all([
+  const [
+    todayOrders,
+    upcoming,
+    tomorrow,
+    income,
+    expense,
+    monthIncome,
+    monthExpense,
+  ] = await Promise.all([
     prisma.order.count({
       where: { ...scope, scheduledAt: { gte: from, lte: to } },
     }),
@@ -70,10 +86,26 @@ export default async function DashboardPage() {
           _sum: { amount: true },
         })
       : Promise.resolve(null),
+    isAdmin
+      ? prisma.income.aggregate({
+          where: { date: { gte: monthFrom, lte: monthTo } },
+          _sum: { amount: true },
+        })
+      : Promise.resolve(null),
+    isAdmin
+      ? prisma.expense.aggregate({
+          where: { date: { gte: monthFrom, lte: monthTo } },
+          _sum: { amount: true },
+        })
+      : Promise.resolve(null),
   ]);
 
   const revenue = Number(income?._sum.amount ?? 0);
   const costs = Number(expense?._sum.amount ?? 0);
+  const profitToday = revenue - costs;
+  const profitMonth =
+    Number(monthIncome?._sum.amount ?? 0) -
+    Number(monthExpense?._sum.amount ?? 0);
 
   const toItems = (
     list: {
@@ -107,9 +139,11 @@ export default async function DashboardPage() {
     { label: 'Dzisiejsze zlecenia', value: String(todayOrders) },
     ...(isAdmin
       ? [
-          { label: 'Przychód dziś', value: formatCurrency(revenue) },
-          { label: 'Wydatki dziś', value: formatCurrency(costs) },
-          { label: 'Zysk dziś', value: formatCurrency(revenue - costs) },
+          { label: 'Zysk dziś', value: formatCurrency(profitToday) },
+          {
+            label: 'Zysk od początku miesiąca',
+            value: formatCurrency(profitMonth),
+          },
         ]
       : []),
   ];

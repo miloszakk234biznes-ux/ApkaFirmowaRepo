@@ -1,15 +1,16 @@
 /**
  * Plik: components/orders/quick-add-fab.tsx
- * Cel: Pływający przycisk (FAB) „+ Szybkie zlecenie" z 3-krokowym formularzem
- *      (klient → termin → kwota), zaprojektowany na wypełnienie < 10 sek.
+ * Cel: Pływający przycisk (FAB) „+” — menu szybkiego dodawania. Dla admina daje
+ *      wybór: zlecenie / przychód / wydatek; dla pozostałych otwiera od razu
+ *      3-krokowy formularz zlecenia (klient → termin → kwota, < 10 sek.).
  *      Dostępny z każdego ekranu (montowany w layout dashboardu).
- * Zależności: components/ui/{dialog,button,input,label,slider}, client-combobox,
- *      lib/fetcher.
+ * Zależności: components/ui/{dialog,button,input,label,slider,dropdown-menu},
+ *      client-combobox, finances/{income,expense}-form-dialog, lib/fetcher.
  */
 'use client';
 
 import * as React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, FileText, TrendingUp, TrendingDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -19,18 +20,28 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { ClientCombobox } from '@/components/orders/client-combobox';
+import { IncomeFormDialog } from '@/components/finances/income-form-dialog';
+import { ExpenseFormDialog } from '@/components/finances/expense-form-dialog';
 import { apiRequest } from '@/lib/fetcher';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { ClientFull } from '@/types';
 
-export function QuickAddFab() {
+export function QuickAddFab({ isAdmin = false }: { isAdmin?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
+  const [incomeOpen, setIncomeOpen] = React.useState(false);
+  const [expenseOpen, setExpenseOpen] = React.useState(false);
   const [step, setStep] = React.useState(0);
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -102,16 +113,52 @@ export function QuickAddFab() {
   const remaining = Math.max(0, (Number(amount) || 0) - (Number(deposit) || 0));
   const steps = ['Klient', 'Termin', 'Kwota'];
 
+  const fabClass =
+    'fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg md:bottom-6 md:right-6';
+
   return (
     <>
-      <Button
-        size="icon"
-        aria-label="Szybkie zlecenie"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg md:bottom-6 md:right-6"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {isAdmin ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" aria-label="Dodaj" className={fabClass}>
+              <Plus className="h-6 w-6" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="end" className="w-56">
+            <DropdownMenuItem onSelect={() => setOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" /> Dodaj zlecenie
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setIncomeOpen(true)}>
+              <TrendingUp className="mr-2 h-4 w-4" /> Dodaj przychód
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setExpenseOpen(true)}>
+              <TrendingDown className="mr-2 h-4 w-4" /> Dodaj wydatek
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <Button
+          size="icon"
+          aria-label="Szybkie zlecenie"
+          onClick={() => setOpen(true)}
+          className={fabClass}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Dodawanie przychodu / wydatku (z kategorią) — jak na komputerze. */}
+      <IncomeFormDialog
+        open={incomeOpen}
+        onOpenChange={setIncomeOpen}
+        onSaved={() => router.refresh()}
+      />
+      <ExpenseFormDialog
+        open={expenseOpen}
+        onOpenChange={setExpenseOpen}
+        onSaved={() => router.refresh()}
+      />
 
       <Dialog
         open={open}
