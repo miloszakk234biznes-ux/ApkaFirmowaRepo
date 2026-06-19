@@ -103,9 +103,9 @@ export default async function DashboardPage() {
   const revenue = Number(income?._sum.amount ?? 0);
   const costs = Number(expense?._sum.amount ?? 0);
   const profitToday = revenue - costs;
-  const profitMonth =
-    Number(monthIncome?._sum.amount ?? 0) -
-    Number(monthExpense?._sum.amount ?? 0);
+  const monthRevenue = Number(monthIncome?._sum.amount ?? 0);
+  const monthCosts = Number(monthExpense?._sum.amount ?? 0);
+  const profitMonth = monthRevenue - monthCosts;
 
   const toItems = (
     list: {
@@ -143,6 +143,10 @@ export default async function DashboardPage() {
           {
             label: 'Zysk od początku miesiąca',
             value: formatCurrency(profitMonth),
+          },
+          {
+            label: 'Wydatki od początku miesiąca',
+            value: formatCurrency(monthCosts),
           },
         ]
       : []),
