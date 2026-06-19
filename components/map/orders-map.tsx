@@ -145,6 +145,21 @@ export function OrdersMap({ orders }: { orders: OrderListItem[] }) {
               {o.title}
             </a>
             <span className="truncate text-muted-foreground">{o.address}</span>
+            {/* Trasa do tego jednego zlecenia (nawigacja Google Maps). */}
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="ml-auto shrink-0 border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black"
+            >
+              <a
+                href={buildRouteDeeplink([o.address!])!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Navigation className="mr-1 h-4 w-4" /> Trasa
+              </a>
+            </Button>
           </li>
         ))}
         {withAddress.length === 0 && (
