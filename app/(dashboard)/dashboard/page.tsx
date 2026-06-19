@@ -26,21 +26,23 @@ export default async function DashboardPage() {
   const to = endOfDay(now);
   const scope = scopeForUser(session);
 
-  // Dzisiejsze zlecenia (wg roli) + nadchodzące.
+  // Dzisiejsze zlecenia (wg roli) — licznik oraz pełna lista na cały dzień
+  // (pokazujemy wszystkie zlecenia dnia, także te z minioną godziną — nie znikają).
   const [todayOrders, upcoming, income, expense] = await Promise.all([
     prisma.order.count({
       where: { ...scope, scheduledAt: { gte: from, lte: to } },
     }),
     prisma.order.findMany({
-      where: { ...scope, scheduledAt: { gte: now } },
+      where: { ...scope, scheduledAt: { gte: from, lte: to } },
       orderBy: { scheduledAt: 'asc' },
-      take: 5,
+      take: 50,
       select: {
         id: true,
         title: true,
         status: true,
         paymentStatus: true,
         amount: true,
+        address: true,
         scheduledAt: true,
         client: { select: { firstName: true, lastName: true } },
       },
@@ -68,6 +70,7 @@ export default async function DashboardPage() {
     status: o.status,
     paymentStatus: o.paymentStatus,
     amount: Number(o.amount),
+    address: o.address ?? null,
     scheduledAt: o.scheduledAt ? o.scheduledAt.toISOString() : null,
     clientName: o.client ? `${o.client.firstName} ${o.client.lastName}` : null,
   }));
@@ -111,7 +114,7 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Najbliższe zlecenia</CardTitle>
+          <CardTitle>Zlecenia na dziś</CardTitle>
         </CardHeader>
         <CardContent>
           <UpcomingOrders orders={upcomingItems} />
