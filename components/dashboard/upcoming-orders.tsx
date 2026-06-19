@@ -12,7 +12,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, Loader2, Navigation } from 'lucide-react';
+import { Check, Loader2, Navigation, Phone } from 'lucide-react';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ export interface UpcomingOrder {
   paymentStatus: PaymentStatus;
   amount: number;
   address: string | null;
+  phone: string | null;
   scheduledAt: string | null;
   clientName: string | null;
 }
@@ -161,6 +162,32 @@ export function UpcomingOrders({
                 >
                   <Navigation className="mr-1 h-4 w-4" />
                   Trasa
+                </Button>
+              )}
+
+              {o.phone ? (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black"
+                >
+                  <a href={`tel:${o.phone}`}>
+                    <Phone className="mr-1 h-4 w-4" />
+                    Zadzwoń
+                  </a>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  className={cn('border-gray-300 bg-white text-black')}
+                  title="Brak numeru telefonu klienta"
+                >
+                  <Phone className="mr-1 h-4 w-4" />
+                  Zadzwoń
                 </Button>
               )}
             </div>
