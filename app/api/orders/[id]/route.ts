@@ -142,7 +142,11 @@ export async function PATCH(req: Request, { params }: Params) {
     });
 
     // Auto-przychód oraz synchronizacja zmian z Google Calendar.
-    if (d.status !== undefined || d.amount !== undefined) {
+    if (
+      d.status !== undefined ||
+      d.amount !== undefined ||
+      d.paymentStatus !== undefined
+    ) {
       await syncOrderIncome(order);
     }
     await syncOrderToGoogle(order, session.user.id);

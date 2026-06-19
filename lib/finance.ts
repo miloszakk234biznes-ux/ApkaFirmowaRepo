@@ -14,7 +14,7 @@ import {
   format,
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Order, OrderStatus } from '@prisma/client';
+import { Order, OrderStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { EXPENSE_CATEGORY } from '@/lib/constants';
 
@@ -22,22 +22,31 @@ import { EXPENSE_CATEGORY } from '@/lib/constants';
 const AUTO_SOURCE = 'AUTO_ORDER';
 
 /**
- * Synchronizuje automatyczny przychód zlecenia: tworzy wpis Income przy DONE
- * (jeśli brak), usuwa go przy zmianie statusu na inny. Idempotentne.
+ * Synchronizuje automatyczny przychód zlecenia: tworzy wpis Income, gdy zlecenie
+ * jest OPŁACONE lub ZAKOŃCZONE (jeśli brak), a usuwa go, gdy przestaje spełniać
+ * ten warunek. Idempotentne. Dzięki temu oznaczenie zlecenia jako „Opłacone"
+ * od razu zasila przychód na pulpicie i w finansach.
  */
 export async function syncOrderIncome(order: Order): Promise<void> {
   const existing = await prisma.income.findFirst({
     where: { orderId: order.id, source: AUTO_SOURCE },
   });
 
-  if (order.status === OrderStatus.DONE) {
+  // Przychód rozpoznajemy kasowo: gdy zlecenie jest opłacone, a dodatkowo
+  // (dla zgodności) gdy zostało zakończone.
+  const shouldHaveIncome =
+    order.paymentStatus === PaymentStatus.PAID ||
+    order.status === OrderStatus.DONE;
+
+  if (shouldHaveIncome) {
     const amount = Number(order.amount);
+    const date = order.scheduledAt ?? new Date();
     if (existing) {
       // Zaktualizuj kwotę, jeśli się zmieniła.
       if (Number(existing.amount) !== amount) {
         await prisma.income.update({
           where: { id: existing.id },
-          data: { amount: order.amount, date: order.scheduledAt ?? new Date() },
+          data: { amount: order.amount, date },
         });
       }
     } else {
@@ -45,7 +54,7 @@ export async function syncOrderIncome(order: Order): Promise<void> {
         data: {
           orderId: order.id,
           amount: order.amount,
-          date: order.scheduledAt ?? new Date(),
+          date,
           source: AUTO_SOURCE,
           description: `Przychód ze zlecenia: ${order.title}`,
         },
