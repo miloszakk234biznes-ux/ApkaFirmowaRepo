@@ -44,7 +44,13 @@ function timeLabel(iso: string | null): string | null {
   return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function UpcomingOrders({ orders }: { orders: UpcomingOrder[] }) {
+export function UpcomingOrders({
+  orders,
+  emptyText = 'Brak zleceń.',
+}: {
+  orders: UpcomingOrder[];
+  emptyText?: string;
+}) {
   const router = useRouter();
   const [payingId, setPayingId] = React.useState<string | null>(null);
 
@@ -64,9 +70,7 @@ export function UpcomingOrders({ orders }: { orders: UpcomingOrder[] }) {
   }
 
   if (orders.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">Brak zleceń na dziś.</p>
-    );
+    return <p className="text-sm text-muted-foreground">{emptyText}</p>;
   }
 
   return (
@@ -81,13 +85,19 @@ export function UpcomingOrders({ orders }: { orders: UpcomingOrder[] }) {
           >
             <Link
               href={`/orders/${o.id}`}
-              className="min-w-0 flex-1 hover:opacity-80"
+              className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80"
             >
-              <p className="truncate font-medium">{o.title}</p>
-              <p className="truncate text-sm text-muted-foreground">
-                {o.clientName ?? 'Brak klienta'}
-                {time ? ` · ${time}` : ''}
-              </p>
+              {time && (
+                <span className="shrink-0 rounded-md bg-muted px-2 py-1 text-sm font-semibold tabular-nums">
+                  {time}
+                </span>
+              )}
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{o.title}</span>
+                <span className="block truncate text-sm text-muted-foreground">
+                  {o.clientName ?? 'Brak klienta'}
+                </span>
+              </span>
             </Link>
 
             <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -122,7 +132,7 @@ export function UpcomingOrders({ orders }: { orders: UpcomingOrder[] }) {
                     asChild
                     size="sm"
                     variant="outline"
-                    className="bg-white text-foreground hover:bg-gray-100"
+                    className="border-gray-300 bg-white text-black hover:bg-gray-100 hover:text-black"
                   >
                     <a
                       href={routeDeeplink(o.address)}
@@ -139,7 +149,7 @@ export function UpcomingOrders({ orders }: { orders: UpcomingOrder[] }) {
                     size="sm"
                     variant="outline"
                     disabled
-                    className={cn('bg-white text-foreground')}
+                    className={cn('border-gray-300 bg-white text-black')}
                     title="Brak adresu w zleceniu"
                   >
                     <Navigation className="mr-1 h-4 w-4" />
