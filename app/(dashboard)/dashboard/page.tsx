@@ -45,7 +45,7 @@ export default async function DashboardPage() {
     amount: true,
     address: true,
     scheduledAt: true,
-    client: { select: { firstName: true, lastName: true } },
+    client: { select: { firstName: true, lastName: true, phone: true } },
   } as const;
 
   // Dzisiejsze zlecenia (wg roli) — licznik oraz pełna lista na cały dzień
@@ -116,7 +116,11 @@ export default async function DashboardPage() {
       amount: unknown;
       address: string | null;
       scheduledAt: Date | null;
-      client: { firstName: string; lastName: string } | null;
+      client: {
+        firstName: string;
+        lastName: string;
+        phone: string | null;
+      } | null;
     }[],
   ) =>
     list.map((o) => ({
@@ -126,6 +130,7 @@ export default async function DashboardPage() {
       paymentStatus: o.paymentStatus,
       amount: Number(o.amount),
       address: o.address ?? null,
+      phone: o.client?.phone ?? null,
       scheduledAt: o.scheduledAt ? o.scheduledAt.toISOString() : null,
       clientName: o.client
         ? `${o.client.firstName} ${o.client.lastName}`
