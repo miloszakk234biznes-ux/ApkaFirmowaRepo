@@ -4,7 +4,7 @@
  *      wydatki, zysk) i lista najbliższych zleceń (z uwzględnieniem RBAC scope).
  * Zależności: lib/auth, lib/prisma, lib/orders, components/*.
  */
-import { startOfDay, endOfDay } from 'date-fns';
+import { startOfDay, endOfDay, addDays } from 'date-fns';
 import { Role } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -24,11 +24,25 @@ export default async function DashboardPage() {
   const now = new Date();
   const from = startOfDay(now);
   const to = endOfDay(now);
+  const tomorrowFrom = startOfDay(addDays(now, 1));
+  const tomorrowTo = endOfDay(addDays(now, 1));
   const scope = scopeForUser(session);
+
+  // Wspólny zestaw pól dla list zleceń na pulpicie.
+  const orderSelect = {
+    id: true,
+    title: true,
+    status: true,
+    paymentStatus: true,
+    amount: true,
+    address: true,
+    scheduledAt: true,
+    client: { select: { firstName: true, lastName: true } },
+  } as const;
 
   // Dzisiejsze zlecenia (wg roli) — licznik oraz pełna lista na cały dzień
   // (pokazujemy wszystkie zlecenia dnia, także te z minioną godziną — nie znikają).
-  const [todayOrders, upcoming, income, expense] = await Promise.all([
+  const [todayOrders, upcoming, tomorrow, income, expense] = await Promise.all([
     prisma.order.count({
       where: { ...scope, scheduledAt: { gte: from, lte: to } },
     }),
@@ -36,16 +50,13 @@ export default async function DashboardPage() {
       where: { ...scope, scheduledAt: { gte: from, lte: to } },
       orderBy: { scheduledAt: 'asc' },
       take: 50,
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        paymentStatus: true,
-        amount: true,
-        address: true,
-        scheduledAt: true,
-        client: { select: { firstName: true, lastName: true } },
-      },
+      select: orderSelect,
+    }),
+    prisma.order.findMany({
+      where: { ...scope, scheduledAt: { gte: tomorrowFrom, lte: tomorrowTo } },
+      orderBy: { scheduledAt: 'asc' },
+      take: 50,
+      select: orderSelect,
     }),
     isAdmin
       ? prisma.income.aggregate({
@@ -64,16 +75,33 @@ export default async function DashboardPage() {
   const revenue = Number(income?._sum.amount ?? 0);
   const costs = Number(expense?._sum.amount ?? 0);
 
-  const upcomingItems = upcoming.map((o) => ({
-    id: o.id,
-    title: o.title,
-    status: o.status,
-    paymentStatus: o.paymentStatus,
-    amount: Number(o.amount),
-    address: o.address ?? null,
-    scheduledAt: o.scheduledAt ? o.scheduledAt.toISOString() : null,
-    clientName: o.client ? `${o.client.firstName} ${o.client.lastName}` : null,
-  }));
+  const toItems = (
+    list: {
+      id: string;
+      title: string;
+      status: (typeof upcoming)[number]['status'];
+      paymentStatus: (typeof upcoming)[number]['paymentStatus'];
+      amount: unknown;
+      address: string | null;
+      scheduledAt: Date | null;
+      client: { firstName: string; lastName: string } | null;
+    }[],
+  ) =>
+    list.map((o) => ({
+      id: o.id,
+      title: o.title,
+      status: o.status,
+      paymentStatus: o.paymentStatus,
+      amount: Number(o.amount),
+      address: o.address ?? null,
+      scheduledAt: o.scheduledAt ? o.scheduledAt.toISOString() : null,
+      clientName: o.client
+        ? `${o.client.firstName} ${o.client.lastName}`
+        : null,
+    }));
+
+  const upcomingItems = toItems(upcoming);
+  const tomorrowItems = toItems(tomorrow);
 
   const kpis = [
     { label: 'Dzisiejsze zlecenia', value: String(todayOrders) },
@@ -117,7 +145,22 @@ export default async function DashboardPage() {
           <CardTitle>Zlecenia na dziś</CardTitle>
         </CardHeader>
         <CardContent>
-          <UpcomingOrders orders={upcomingItems} />
+          <UpcomingOrders
+            orders={upcomingItems}
+            emptyText="Brak zleceń na dziś."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Zlecenia na jutro</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UpcomingOrders
+            orders={tomorrowItems}
+            emptyText="Brak zleceń na jutro."
+          />
         </CardContent>
       </Card>
     </div>
